@@ -1,37 +1,34 @@
-# .
+# 报告生成器
 
-This template should help get you started developing with Vue 3 in Vite.
+一个基于 Vue 3 和 Vite 构建的、用于生成报告的富文本编辑器。
 
-## Recommended IDE Setup
+## 功能特性
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+*   **富文本编辑器**: 一个功能强大且直观的编辑器，用于创建和格式化报告。
+*   **工具栏**: 简单易用的工具栏，提供常用的格式化选项：
+    *   标题 (H1, H2, H3)
+    *   粗体和斜体
+    *   无序列表
+    *   代码块
+*   **实时预览**: 在您输入时实时查看报告的预览。
+*   **数据源集成**:
+    *   直接从外部 API 插入动态数据到您的报告中。
+    *   属性面板允许您编辑 API 接口地址并选择所需的变量。
 
-## Recommended Browser Setup
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## 项目设置
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### 编译和热重载（用于开发）
 
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+### 编译和压缩（用于生产）
 
 ```sh
 npm run build
