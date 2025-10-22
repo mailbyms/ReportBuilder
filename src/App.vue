@@ -1,10 +1,10 @@
 <script setup>
-import MarkdownEditor from './components/MarkdownEditor.vue'
+import ReportEditor from './components/ReportEditor.vue'
 </script>
 
 <template>
   <div id="app" class="editor-app">
-    <MarkdownEditor />
+    <ReportEditor />
   </div>
 </template>
 
