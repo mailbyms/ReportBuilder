@@ -9,12 +9,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start-server": "node server.js",
+    "dev2": "concurrently \"npm run dev\" \"npm run start-server\""
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "@tiptap/starter-kit": "^3.7.2",
     "@tiptap/vue-3": "^3.7.2",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.3",
     "element-plus": "^2.11.5",
+    "express": "^5.1.0",
+    "mysql2": "^3.15.3",
     "vue": "^3.5.22"
   },
   "optionalDependencies": {
