@@ -5,6 +5,37 @@
         <template #header>
           <div class="toolbar">
             <div class="toolbar-left">
+            当前报告：
+              <el-select
+                v-model="selectedReportId"
+                placeholder="选择报告"
+                size="small"
+                style="width: 120px; margin-right: 8px;"
+                @change="loadReport"
+                :disabled="!isEditorReady"
+                clearable
+              >
+                <el-option
+                  v-for="report in reportsList"
+                  :key="report.id"
+                  :label="report.report_name"
+                  :value="report.id"
+                />
+              </el-select>              
+            </div>
+
+            <div class="toolbar-right">
+              <el-button-group>
+                <el-button size="small" @click="saveReport" type="success" :disabled="!isEditorReady">保存</el-button>
+                <el-button size="small" @click="deleteReport" type="danger" :disabled="!isEditorReady || !currentReportId">删除</el-button>
+              </el-button-group>
+               </div>
+            <input type="file" ref="fileInput" @change="handleFileImport" style="display: none" accept=".html" />
+          </div>
+        </template>
+
+        <div class="toolbar">
+            <div class="toolbar-left">
               <el-button-group>
                 <el-button size="small" @click="toggleH1" :disabled="!isEditorReady" :type="isActive('heading', { level: 1 }) ? 'primary' : ''">H1</el-button>
                 <el-button size="small" @click="toggleH2" :disabled="!isEditorReady" :type="isActive('heading', { level: 2 }) ? 'primary' : ''">H2</el-button>
@@ -22,34 +53,9 @@
               </el-button-group>
             </div>
             <div class="toolbar-right">
-              <el-button-group>
-                <el-button size="small" @click="importContent" :disabled="!isEditorReady">Import</el-button>
-                <el-button size="small" @click="exportContent" :disabled="!isEditorReady">Export</el-button>
-              </el-button-group>
-              <el-select
-                v-model="selectedReportId"
-                placeholder="选择报告"
-                size="small"
-                style="width: 120px; margin-right: 8px;"
-                @change="loadReport"
-                :disabled="!isEditorReady"
-                clearable
-              >
-                <el-option
-                  v-for="report in reportsList"
-                  :key="report.id"
-                  :label="report.report_name"
-                  :value="report.id"
-                />
-              </el-select>
-              <el-button-group>
-                <el-button size="small" @click="saveReport" type="success" :disabled="!isEditorReady">保存</el-button>
-                <el-button size="small" @click="deleteReport" type="danger" :disabled="!isEditorReady || !currentReportId">删除</el-button>
-              </el-button-group>
             </div>
             <input type="file" ref="fileInput" @change="handleFileImport" style="display: none" accept=".html" />
           </div>
-        </template>
 
         <div class="editor-wrapper card-body">
           <EditorContent class="editor-content" :editor="editor" />
@@ -464,27 +470,36 @@ function toggleList() {
 .split {
   display: flex;
   height: 100vh;
+  --padding-base: 12px;
+  --padding-small: 8px;
+  --padding-xs: 4px;
+  --border-radius-base: 6px;
+  --border-color: #e5e7eb;
+  --background-color-hover: #f0f0f0;
+  --background-color-selected: #e0e0e0;
+  --pre-background-color: #0f172a;
+  --pre-color: #e6eef8;
 }
 .left, .right {
   flex: 1;
-  padding: 12px;
+  padding: var(--padding-base);
   box-sizing: border-box;
 }
 .left {
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
 }
 .toolbar {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--padding-small);
   flex-wrap: wrap;
 }
 
 .toolbar-left, .toolbar-right {
   display: flex;
-  gap: 8px;
+  gap: var(--padding-small);
   align-items: center;
 }
 .editor-card, .properties-card, .preview-card {
@@ -494,17 +509,17 @@ function toggleList() {
 }
 
 .card-body, .properties-body {
-  padding: 8px 0;
+  padding: var(--padding-small) 0;
   flex: 1;
   min-height: 0; /* allow proper flex scrolling */
 }
 
 .editor-content {
   height: 100%;
-  padding: 12px;
+  padding: var(--padding-base);
   box-sizing: border-box;
-  border: 1px solid var(--el-border-color, #e5e7eb);
-  border-radius: 6px;
+  border: 1px solid var(--el-border-color, var(--border-color));
+  border-radius: var(--border-radius-base);
   overflow: auto;
 }
 
@@ -515,7 +530,7 @@ function toggleList() {
 .editor-content .ProseMirror:focus {
   outline: none !important;
   box-shadow: none !important;
-  border-color: var(--el-border-color, #e5e7eb) !important;
+  border-color: var(--el-border-color, var(--border-color)) !important;
 }
 
 /* Override ProseMirror's webkit focus ring with light blue */
@@ -524,14 +539,14 @@ function toggleList() {
 }
 
 .preview {
-  padding: 12px;
+  padding: var(--padding-base);
   overflow: auto;
 }
 .preview pre {
-  background: #0f172a;
-  color: #e6eef8;
-  padding: 12px;
-  border-radius: 6px;
+  background: var(--pre-background-color);
+  color: var(--pre-color);
+  padding: var(--padding-base);
+  border-radius: var(--border-radius-base);
 }
 
 .variables-list {
@@ -541,19 +556,18 @@ function toggleList() {
 }
 
 .variable-item {
-  padding: 4px 8px;
   cursor: pointer;
 }
 
+.variable-item, .loading {
+  padding: var(--padding-xs) var(--padding-small);
+}
+
 .variable-item:hover {
-  background-color: #f0f0f0;
+  background-color: var(--background-color-hover);
 }
 
 .variable-item.is-selected {
-  background-color: #e0e0e0;
-}
-
-.loading {
-  padding: 4px 8px;
+  background-color: var(--background-color-selected);
 }
 </style>
