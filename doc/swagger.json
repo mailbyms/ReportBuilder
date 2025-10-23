@@ -203,7 +203,15 @@
                                             ],
                                             "description": "任务执行状态"
                                         },
-                                        "result": {
+                                        "agentUuid": {
+                                            "type": "string",
+                                            "description": "智能体的唯一标识符"
+                                        },
+                                        "taskId": {
+                                            "type": "integer",
+                                            "description": "数据库中记录的任务ID"
+                                        },
+                                        "details": {
                                             "type": "array",
                                             "items": {
                                                 "type": "object",
@@ -222,20 +230,9 @@
                                                     },
                                                     "vlmResult": {
                                                         "type": "object",
-                                                        "description": "VLM分析结果（如果存在）"
+                                                        "description": "VLM分析结果（如果存在），{\"var1\": 53,\"var2\": 0}"
                                                     }
                                                 }
-                                            }
-                                        },
-                                        "taskId": {
-                                            "type": "integer",
-                                            "description": "数据库中记录的任务ID"
-                                        },
-                                        "details": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "每个节点的详细执行情况"
                                             }
                                         }
                                     }

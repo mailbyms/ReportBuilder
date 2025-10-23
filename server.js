@@ -63,7 +63,7 @@ app.get('/api/reports/:id', async (req, res) => {
 
 // API endpoint to save or update reports
 app.post('/api/reports', async (req, res) => {
-    console.log('POST /api/reports received:', req.body);
+    // console.log('POST /api/reports received:', req.body);
     const { id, report_name, report_content } = req.body;
 
     //console.log('Received report data:', req.body);

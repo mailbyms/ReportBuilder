@@ -1,0 +1,55 @@
+{
+    "status": "success",
+    "agentUuid": "75194d7d-0dd6-4106-aad9-d7f590acb853",
+    "taskId": 98,
+    "details": [
+        {
+            "id": "6622f52ef7a79f64",
+            "type": "begin",
+            "displayName": "开始",
+            "status": "skip (not implemented)"
+        },
+        {
+            "id": "login_1761194949495_wmjwyz",
+            "type": "loginweb",
+            "displayName": "登录网站",
+            "status": "loginweb done (session restored)"
+        },
+        {
+            "id": "4be60d402bdc6288",
+            "type": "openwebpage",
+            "displayName": "打开网页",
+            "status": "openwebpage done"
+        },
+        {
+            "id": "19c076cc025c84a2",
+            "type": "delay",
+            "displayName": "定时等候",
+            "status": "delay 1000ms done"
+        },
+        {
+            "id": "b8431a65601c8f8c",
+            "type": "screenshot",
+            "displayName": "截图分析",
+            "status": "screenshot saved (vlm analysis done)",
+            "vlmResult": {
+                "var1": 53,
+                "var2": 0,
+                "var3": 0,
+                "var4": 0,
+                "var5": 9347,
+                "var6": 0,
+                "var7": 9347,
+                "var8": 0,
+                "var9": 1329,
+                "var10": 1040,
+                "var11": 0,
+                "var12": 289,
+                "var13": 0,
+                "var14": 0,
+                "var15": 0,
+                "var16": 0
+            }
+        }
+    ]
+}

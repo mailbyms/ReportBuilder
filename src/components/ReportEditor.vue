@@ -1,4 +1,5 @@
 <template>
+  <TopLoadingBar :loading="isLoading" />
   <div class="split">
     <div class="left">
       <el-card class="editor-card">
@@ -107,6 +108,16 @@
         </div>
       </el-card>
       <el-card v-else class="preview-card">
+        <template #header>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <el-button size="small" @click="refreshPreview" :disabled="isLoading">刷新</el-button>
+            </div>
+            <div class="toolbar-right">
+              <el-button size="small" @click="exportContent" type="primary">导出</el-button>
+            </div>
+          </div>
+        </template>
         <div class="preview" v-html="html"></div>
       </el-card>
     </div>
@@ -115,6 +126,7 @@
 
 <script setup>
 import { ref, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
+import TopLoadingBar from './TopLoadingBar.vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Document from '@tiptap/extension-document'
@@ -160,6 +172,8 @@ const currentReportId = ref(null) // 当前编辑器加载的报告ID
 const currentReportName = ref('') // 当前编辑器加载的报告名称
 const agents = ref([]) // 存储智能体列表
 const selectedAgentId = ref(null) // 当前选中的智能体ID
+const storedAgentValues = ref({}); // 存储从localStorage加载的变量值
+const isLoading = ref(false);
 
 const editor = useEditor({
   extensions: [
@@ -171,10 +185,9 @@ const editor = useEditor({
   ],
   content: sampleHtml,
   onTransaction: ({ editor }) => {
-    html.value = editor.getHTML()
+    updatePreview(editor.getHTML());
   },
   onCreate: ({ editor }) => {
-    html.value = editor.getHTML()
     isEditorReady.value = true
     loadReportsList() // 编辑器准备好后加载报告列表
   },
@@ -197,9 +210,40 @@ const editor = useEditor({
 })
 
 onMounted(async () => {
+  const savedValues = localStorage.getItem('agentValues');
+  if (savedValues) {
+    storedAgentValues.value = JSON.parse(savedValues);
+  }
   await loadAgents();
+  updatePreview(editor.value.getHTML());
 });
 
+function updatePreview(content) {
+  const values = storedAgentValues.value;
+  if (Object.keys(values).length === 0) {
+    html.value = content;
+    return;
+  }
+
+  let processedContent = content;
+  const placeholders = processedContent.match(/<span data-type="dataSource"[^>]*>.*?<\/span>/g) || [];
+
+  placeholders.forEach(placeholder => {
+    const apiIdMatch = placeholder.match(/data-api-id="([^"]+)"/);
+    const variableIdMatch = placeholder.match(/data-variable-id="([^"]+)"/);
+
+    if (apiIdMatch && variableIdMatch) {
+      const apiId = apiIdMatch[1];
+      const variableId = variableIdMatch[1];
+      const value = values[apiId]?.[variableId];
+
+      if (value !== null && value !== undefined) {
+        processedContent = processedContent.replace(placeholder, value);
+      }
+    }
+  });
+  html.value = processedContent;
+}
 
 async function loadAgents() {
   try {
@@ -229,7 +273,8 @@ watch(selectedNode, async (newNode) => {
     } else {
       selectedVariables.value = []
     }
-  } else {
+  }
+  else {
     selectedApiId.value = ''
     selectedVariableId.value = ''
     selectedVariables.value = []
@@ -324,6 +369,67 @@ function handleFileImport(event) {
     editor.value.commands.setContent(content)
   }
   reader.readAsText(file)
+}
+
+async function refreshPreview() {
+  isLoading.value = true;
+  try {
+    let content = editor.value.getHTML();
+    const placeholders = content.match(/<span data-type="dataSource"[^>]*>.*?<\/span>/g) || [];
+    const agentUuids = new Set();
+    
+    placeholders.forEach(placeholder => {
+      const apiIdMatch = placeholder.match(/data-api-id="([^"]+)"/);
+      if (apiIdMatch) {
+        agentUuids.add(apiIdMatch[1]);
+      }
+    });
+
+    if (agentUuids.size === 0) {
+      updatePreview(content);
+      ElMessage.success('预览已刷新！');
+      return;
+    }
+
+    const agentDataPromises = Array.from(agentUuids).map(uuid =>
+      fetch('/api/workflow/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uuid }),
+      }).then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data for agent ${uuid}`);
+        }
+        return response.json();
+      })
+    );
+
+    const results = await Promise.all(agentDataPromises);
+    const agentValues = results.reduce((acc, data) => {
+      const uuid = data.agentUuid;
+      if (uuid) {
+        acc[uuid] = data.details.reduce((vars, item) => {
+          if (item.vlmResult) {
+            Object.assign(vars, item.vlmResult);
+          }
+          return vars;
+        }, {});
+      }
+      return acc;
+    }, {});
+
+    storedAgentValues.value = agentValues;
+    localStorage.setItem('agentValues', JSON.stringify(agentValues));
+    
+    updatePreview(content);
+    ElMessage.success('预览已刷新并替换占位符！');
+  } catch (error) {
+    console.error('Error during preview refresh:', error);
+    updatePreview(content); // Show preview with old values on error
+    ElMessage.error('刷新预览时发生错误。');
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 function exportContent() {
@@ -469,7 +575,8 @@ async function deleteReport() {
   } catch (error) {
     if (error === 'cancel') {
       ElMessage.info('删除操作已取消。');
-    } else {
+    }
+    else {
       console.error('Error deleting report:', error);
       ElMessage.error('删除报告时发生意外错误。');
     }
