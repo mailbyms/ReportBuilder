@@ -48,11 +48,25 @@
               <el-button-group>
                 <el-button size="small" @click="toggleList" :disabled="!isEditorReady" :type="isActive('bulletList') ? 'primary' : ''">List</el-button>
               </el-button-group>
+            </div>
+            <div class="toolbar-right">
+              <el-select
+                v-model="selectedAgentId"
+                placeholder="选择智能体"
+                size="small"
+                style="width: 150px;"
+                :disabled="!isEditorReady"
+              >
+                <el-option
+                  v-for="agent in agents"
+                  :key="agent.uuid"
+                  :label="agent.name"
+                  :value="agent.uuid"
+                />
+              </el-select>
               <el-button-group>
                 <el-button size="small" @click="addDataSource" :disabled="!isEditorReady" type="primary">Data Source</el-button>
               </el-button-group>
-            </div>
-            <div class="toolbar-right">
             </div>
             <input type="file" ref="fileInput" @change="handleFileImport" style="display: none" accept=".html" />
           </div>
@@ -65,17 +79,17 @@
     <div class="right">
       <el-card v-if="selectedNode" class="properties-card">
         <template #header>
-          <div>Data Source Properties</div>
+          <div>数据源属性</div>
         </template>
         <div class="properties-body">
           <el-form label-position="top">
-            <el-form-item label="API ID">
+            <el-form-item label="智能体 ID">
               <el-input v-model="selectedApiId" @change="updateDataSource" />
             </el-form-item>
-            <el-form-item label="Variable ID">
+            <el-form-item label="变量 Key">
               <el-input v-model="selectedVariableId" @change="updateVariableId" />
             </el-form-item>
-            <el-form-item label="Available Variables">
+            <el-form-item>
               <div v-if="loading" class="loading">Loading...</div>
               <ul v-else class="variables-list">
                 <li
@@ -100,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Document from '@tiptap/extension-document'
@@ -144,6 +158,8 @@ const reportsList = ref([]) // 存储报告列表
 const selectedReportId = ref(null) // 当前选中的报告ID
 const currentReportId = ref(null) // 当前编辑器加载的报告ID
 const currentReportName = ref('') // 当前编辑器加载的报告名称
+const agents = ref([]) // 存储智能体列表
+const selectedAgentId = ref(null) // 当前选中的智能体ID
 
 const editor = useEditor({
   extensions: [
@@ -179,6 +195,30 @@ const editor = useEditor({
     }
   },
 })
+
+onMounted(async () => {
+  await loadAgents();
+});
+
+
+async function loadAgents() {
+  try {
+    const response = await fetch('/api/agents');
+    if (response.ok) {
+      const data = await response.json();
+      agents.value = data.list;
+      if (agents.value.length > 0) {
+        selectedAgentId.value = agents.value[0].uuid;
+      }
+      ElMessage.success(`智能体列表加载成功，共 ${agents.value.length} 个智能体！`);
+    } else {
+      ElMessage.error('加载智能体列表失败。');
+    }
+  } catch (error) {
+    console.error('Error loading agents list:', error);
+    ElMessage.error('加载智能体列表时发生错误。');
+  }
+}
 
 watch(selectedNode, async (newNode) => {
   if (newNode) {
@@ -216,7 +256,14 @@ async function fetchVariables(apiId) {
 }
 
 function addDataSource() {
-  if (!isEditorReady.value) return
+  if (!isEditorReady.value) return;
+  if (!selectedAgentId.value) {
+    ElMessage.warning('请先选择一个智能体。');
+    return;
+  }
+
+  const selectedAgent = agents.value.find(agent => agent.uuid === selectedAgentId.value);
+  const agentName = selectedAgent ? selectedAgent.name : 'agent';
 
   const currentCounter = editor.value.state.doc.attrs.dataSourceCounter || 0
   const newCounter = currentCounter + 1
@@ -224,7 +271,11 @@ function addDataSource() {
 
   editor.value.chain().focus().insertContent({
     type: 'dataSource',
-    attrs: { apiId: 'test', variableId: newVariableId },
+    attrs: { 
+      apiId: selectedAgentId.value, 
+      variableId: newVariableId, 
+      agentName: agentName 
+    },
   }).run()
 
   editor.value.commands.command(({ tr }) => {

@@ -1,6 +1,6 @@
 <template>
   <node-view-wrapper as="span" class="data-source-node" :class="{ 'is-selected': selected }">
-    {{ node.attrs.apiId || 'apiId' }}.{{ node.attrs.variableId || 'variableId' }}
+    {{ node.attrs.agentName || 'agentName' }}.{{ node.attrs.variableId || 'variableId' }}
   </node-view-wrapper>
 </template>
 

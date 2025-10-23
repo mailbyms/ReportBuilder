@@ -35,6 +35,16 @@ const DataSourceNode = Node.create({
           return { 'data-variable-id': attributes.variableId }
         },
       },
+      agentName: {
+        default: null,
+        parseHTML: element => element.getAttribute('data-agent-name'),
+        renderHTML: attributes => {
+          if (!attributes.agentName) {
+            return {}
+          }
+          return { 'data-agent-name': attributes.agentName }
+        },
+      },
     }
   },
 

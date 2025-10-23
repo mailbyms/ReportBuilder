@@ -18,7 +18,14 @@ export default defineConfig({
   server: {
     open: true,
     proxy: {
-      '/api': 'http://localhost:3000'
+      '/api/agents': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
     },
   },
 })

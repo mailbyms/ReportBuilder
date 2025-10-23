@@ -1,0 +1,288 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "AlarmAgent API 文档",
+        "version": "1.0.0",
+        "description": "AlarmAgent 项目的 API 接口文档"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3001",
+            "description": "开发服务器"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/api/agents": {
+            "get": {
+                "summary": "获取智能体列表",
+                "description": "获取所有智能体或根据 UUID 查询特定智能体，支持分页。",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "智能体的唯一标识符"
+                    },
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "description": "页码"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pageSize",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "description": "每页返回的数量"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取智能体列表",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "list": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "idx": {
+                                                        "type": "integer"
+                                                    },
+                                                    "uuid": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "icon": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "screenshot_count": {
+                                                        "type": "integer"
+                                                    },
+                                                    "workflow": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "description": "总记录数"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/workflow/execute": {
+            "post": {
+                "summary": "执行单个工作流",
+                "description": "执行指定智能体的工作流，并返回详细的执行结果、截图和VLM分析结果（如果存在）。",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "uuid"
+                                ],
+                                "properties": {
+                                    "uuid": {
+                                        "type": "string",
+                                        "description": "智能体的唯一标识符"
+                                    },
+                                    "workflow": {
+                                        "type": "object",
+                                        "description": "要执行的工作流定义（可选，如果为空则从数据库加载）",
+                                        "example": {
+                                            "d": [
+                                                {
+                                                    "id": "begin_node",
+                                                    "type": "begin",
+                                                    "p": {
+                                                        "displayName": "开始"
+                                                    },
+                                                    "wires": [
+                                                        [
+                                                            "openwebpage_node"
+                                                        ]
+                                                    ]
+                                                },
+                                                {
+                                                    "id": "openwebpage_node",
+                                                    "type": "openwebpage",
+                                                    "p": {
+                                                        "displayName": "打开网页"
+                                                    },
+                                                    "a": {
+                                                        "url": "https://www.example.com"
+                                                    },
+                                                    "wires": []
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "工作流执行成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success",
+                                                "failed"
+                                            ],
+                                            "description": "任务执行状态"
+                                        },
+                                        "result": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "displayName": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "vlmResult": {
+                                                        "type": "object",
+                                                        "description": "VLM分析结果（如果存在）"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "taskId": {
+                                            "type": "integer",
+                                            "description": "数据库中记录的任务ID"
+                                        },
+                                        "details": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "每个节点的详细执行情况"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "details": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "错误发生前的节点执行情况"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": []
+}
