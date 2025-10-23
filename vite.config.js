@@ -18,6 +18,10 @@ export default defineConfig({
   server: {
     open: true,
     proxy: {
+      '/api/crawler': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
       '/api/agents': {
         target: 'http://localhost:3001',
         changeOrigin: true,

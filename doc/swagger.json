@@ -133,6 +133,71 @@
                 }
             }
         },
+        "/api/crawler/shot/{shotId}": {
+            "get": {
+                "summary": "根据shotId获取截图图像",
+                "description": "通过在crawler_shot表中存储的shotId获取Base64编码的截图图像数据。",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "shotId",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "截图在crawler_shot表中的ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功获取截图图像",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "image_base64": {
+                                            "type": "string",
+                                            "description": "Base64编码的图像数据"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "未找到对应的截图图像",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/workflow/execute": {
             "post": {
                 "summary": "执行单个工作流",
@@ -230,7 +295,11 @@
                                                     },
                                                     "vlmResult": {
                                                         "type": "object",
-                                                        "description": "VLM分析结果（如果存在），{\"var1\": 53,\"var2\": 0}"
+                                                        "description": "VLM分析结果（如果存在）"
+                                                    },
+                                                    "shotId": {
+                                                        "type": "integer",
+                                                        "description": "截图在crawler_shot表中的ID（如果节点类型为screenshot）"
                                                     }
                                                 }
                                             }

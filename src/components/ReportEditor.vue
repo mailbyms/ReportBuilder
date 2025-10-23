@@ -90,6 +90,13 @@
             <el-form-item label="变量 Key">
               <el-input v-model="selectedVariableId" @change="updateVariableId" />
             </el-form-item>
+            <el-form-item label="当前值">
+              <el-input v-model="selectedValue" readonly />
+            </el-form-item>
+            <el-form-item label="关联图片">
+              <img v-if="selectedImgBase64" :src="selectedImgBase64" style="max-width: 100%;" />
+              <div v-else>无</div>
+            </el-form-item>
             <el-form-item>
               <div v-if="loading" class="loading">Loading...</div>
               <ul v-else class="variables-list">
@@ -174,6 +181,8 @@ const agents = ref([]) // 存储智能体列表
 const selectedAgentId = ref(null) // 当前选中的智能体ID
 const storedAgentValues = ref({}); // 存储从localStorage加载的变量值
 const isLoading = ref(false);
+const selectedValue = ref(null);
+const selectedImgBase64 = ref(null);
 
 const editor = useEditor({
   extensions: [
@@ -268,6 +277,25 @@ watch(selectedNode, async (newNode) => {
   if (newNode) {
     selectedApiId.value = newNode.attrs.apiId
     selectedVariableId.value = newNode.attrs.variableId
+    selectedValue.value = null;
+    selectedImgBase64.value = null;
+
+    const agentData = storedAgentValues.value[newNode.attrs.apiId];
+    if (agentData) {
+      selectedValue.value = agentData[newNode.attrs.variableId];
+      if (agentData.shotId) {
+        try {
+          const response = await fetch(`/api/crawler/shot/${agentData.shotId}`);
+          if (response.ok) {
+            const imageData = await response.json();
+            selectedImgBase64.value = `data:image/png;base64,${imageData.image_base64}`;
+          }
+        } catch (error) {
+          console.error('Error fetching image:', error);
+        }
+      }
+    }
+
     if (newNode.attrs.apiId) {
       await fetchVariables(newNode.attrs.apiId)
     } else {
@@ -278,26 +306,12 @@ watch(selectedNode, async (newNode) => {
     selectedApiId.value = ''
     selectedVariableId.value = ''
     selectedVariables.value = []
+    selectedValue.value = null;
+    selectedImgBase64.value = null;
   }
 })
 
 async function fetchVariables(apiId) {
-  if (!apiId) return
-  loading.value = true
-  try {
-    const response = await fetch(`/api/workflow/crawler/test/${apiId}`)
-    if (response.ok) {
-      const data = await response.json()
-      selectedVariables.value = Object.keys(data)
-    } else {
-      selectedVariables.value = []
-    }
-  } catch (error) {
-    console.error('Error fetching variables:', error)
-    selectedVariables.value = []
-  } finally {
-    loading.value = false
-  }
 }
 
 function addDataSource() {
@@ -411,6 +425,9 @@ async function refreshPreview() {
         acc[uuid] = data.details.reduce((vars, item) => {
           if (item.vlmResult) {
             Object.assign(vars, item.vlmResult);
+          }
+          if (item.shotId) {
+            vars.shotId = item.shotId;
           }
           return vars;
         }, {});
