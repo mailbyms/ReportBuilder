@@ -219,10 +219,6 @@ const editor = useEditor({
 })
 
 onMounted(async () => {
-  const savedValues = localStorage.getItem('agentValues');
-  if (savedValues) {
-    storedAgentValues.value = JSON.parse(savedValues);
-  }
   await loadAgents();
   updatePreview(editor.value.getHTML());
 });
@@ -386,6 +382,14 @@ function handleFileImport(event) {
 }
 
 async function refreshPreview() {
+  if (!currentReportId.value) {
+    ElMessage.warning('请先选择一个报告。');
+    return;
+  }
+  const key = `agentValues_${currentReportId.value}`;
+  localStorage.removeItem(key);
+  storedAgentValues.value = {};
+  updatePreview(editor.value.getHTML()); // Refresh preview to show placeholders
   isLoading.value = true;
   try {
     let content = editor.value.getHTML();
@@ -436,7 +440,7 @@ async function refreshPreview() {
     }, {});
 
     storedAgentValues.value = agentValues;
-    localStorage.setItem('agentValues', JSON.stringify(agentValues));
+    localStorage.setItem(key, JSON.stringify(agentValues));
     
     updatePreview(content);
     ElMessage.success('预览已刷新并替换占位符！');
@@ -476,15 +480,26 @@ async function loadReportsList() {
   }
 }
 
-// 加载单个报告内容
 async function loadReport(reportId) {
+  // Clear old data first
+  storedAgentValues.value = {};
+  
   if (!reportId) {
     editor.value.commands.setContent(sampleHtml);
     currentReportId.value = null;
     currentReportName.value = '';
     selectedReportId.value = null;
+    updatePreview(editor.value.getHTML());
     return;
   }
+
+  // Load from localStorage
+  const key = `agentValues_${reportId}`;
+  const savedValues = localStorage.getItem(key);
+  if (savedValues) {
+    storedAgentValues.value = JSON.parse(savedValues);
+  }
+
   try {
     const response = await fetch(`/api/reports/${reportId}`);
     if (response.ok) {
@@ -493,6 +508,7 @@ async function loadReport(reportId) {
       currentReportId.value = report.id;
       currentReportName.value = report.report_name;
       ElMessage.success(`报告 \'${report.report_name}\' 加载成功！`);
+      updatePreview(editor.value.getHTML());
     } else {
       ElMessage.error('加载报告内容失败。');
     }
@@ -573,6 +589,9 @@ async function deleteReport() {
         type: 'warning',
       }
     );
+
+    const key = `agentValues_${currentReportId.value}`;
+    localStorage.removeItem(key);
 
     const response = await fetch(`/api/reports/${currentReportId.value}`, {
       method: 'DELETE',

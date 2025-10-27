@@ -33,3 +33,15 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## 正式部署
+### 打包前后端镜像
+注意镜像名称与 docker-compose.yml 定义的一致
+```bash
+docker build -f backend.Dockerfile -t mailbyms/reportbuilder-backend .
+docker build -f frontend.Dockerfile -t mailbyms/reportbuilder-frontend .
+```
+### 启动
+```bash
+docker-compose up -d
+```
